@@ -1,34 +1,48 @@
-
-version: "3"
+version: "2"
 services:
   
-  etcd:
-    image: etcd:latest
+  etcd1: &etcd
+    image: etcd
     networks:
       - network1
-    container_name: node1
-    hostname: node1
-    ports:
-      - "2380:2380"
-      - "2379:2379"
-      - "8008:8008"
-     
+    environment:
+      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_INITIAL_CLUSTER: node1=http://node1:2380,node2=http://node2:2380
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_INITIAL_CLUSTER_TOKEN: tutorial
     build:
       context: ./etcd_node1
-      
-  pp:
-    image: patrpost:latest
+    container_name: node1
+    hostname: node1
+    command: etcd -name node1 -initial-advertise-peer-urls http://node1:2380
+    command: etcd -name node1 -advertise-client-urls http://node1:2379  
+  etcd2:
+    <<: *etcd
     container_name: node2
     hostname: node2
-    depends_on:
-      - etcd
-    networks:
-      - network1
-    ports:
-      - "5432:5432"
-      - "6432:6432"      
-    build: 
-      context: ./patroni
+    command: etcd -name node2 -initial-advertise-peer-urls http://node2:2380
+    command: etcd -name node2 -advertise-client-urls http://node2:2379 
+      
+#  pp1: &pp
+#    image: patrpost
+#    depends_on:
+#      - etcd1
+#      - etcd2
+#    networks:
+#      - network1
+#    container_name: patrpost1
+#    hostname: pp1  #
+
+#    build: 
+#      context: ./patroni
+#   
+#   pp2:
+#     <<: *pp
+#     container_name: patrpost2
+#     hostname: pp2  
+
+
 
 networks:
   network1:
