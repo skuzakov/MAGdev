@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3"
 services:
   
   etcd1: &etcd
@@ -98,6 +98,19 @@ services:
     command: service postgresql restart
     command: patroni /etc/patroni.yml
 
+  haproxy:
+    image: haproxy
+    networks: network1
+    hostname: haproxy
+    container_name: haproxy
+    environment:
+      PATRONI_SCOPE: pgsql
+    build:
+      context: ./HAproxy
+      dockerfile: Dockerfile
+    networks:
+      network1:
+        ipv4_address: 172.16.0.20
 
 networks:
   network1:
