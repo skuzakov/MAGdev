@@ -1,9 +1,9 @@
 scope: pgsql 
-namespace: cluster
+namespace: /cluster/
 
-restapi:
-    listen: 127.0.0.1:8008
-    connect_address: 127.0.0.1:8008
+#restapi:
+#    listen: 0.0.0.0:8008
+#    connect_address: 127.0.0.1:8008
 
 etcd:
     hosts: node1:2379,node2:2379
@@ -28,29 +28,28 @@ bootstrap:
                     checkpoint_timeout: 30
 
     initdb:
-    - encoding: UTF8
+    - encoding: UTF-8
     - data-checksums
-    - locale: en_US.UTF8
+    - locale: C.UTF-8
     # init pg_hba.conf должен содержать адреса ВСЕХ машин, используемых в кластере
     pg_hba:
-#    - host replication postgres ::1/128 md5
+    - host replication postgres ::1/128 md5
     - host replication postgres 127.0.0.1/32 md5
-#    - host replication postgres pp1 md5
-#    - host replication postgres pp2 md5
+    - host replication postgres 172.16.0.3/24 md5
+    - host replication postgres 172.16.0.4/24 md5
     - host all all 0.0.0.0/0 md5
 
     users:
         admin:
             password: admin
             options:
-                - createrole
-                - createdb
-
+              - createrole
+              - createdb
 postgresql:
-    listen: 127.0.0.1:5432
-    connect_address: 127.0.0.1:5432
+#    listen: 0.0.0.0:5432
+#    connect_address: 127.0.0.1:5432
     data_dir: /data/patroni
-    bin_dir:  /usr/lib/postgresql/14/bin
+    bin_dir:  /usr/lib/postgresql/9.6/bin
     pgpass: /tmp/pgpass
     authentication:
         replication:

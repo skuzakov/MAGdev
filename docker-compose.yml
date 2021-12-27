@@ -1,10 +1,8 @@
-version: "2"
+version: "3.3"
 services:
   
   etcd1: &etcd
     image: etcd
-    networks:
-      - network1
     environment:
       ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
       ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
@@ -15,34 +13,76 @@ services:
       context: ./etcd_node1
     container_name: node1
     hostname: node1
+    networks:
+      network1:
+        ipv4_address: 172.16.0.1 
     command: etcd -name node1 -initial-advertise-peer-urls http://node1:2380
     command: etcd -name node1 -advertise-client-urls http://node1:2379  
   etcd2:
     <<: *etcd
     container_name: node2
     hostname: node2
+    networks:
+      network1:
+        ipv4_address: 172.16.0.2 
     command: etcd -name node2 -initial-advertise-peer-urls http://node2:2380
     command: etcd -name node2 -advertise-client-urls http://node2:2379 
       
-#  pp1: &pp
-#    image: patrpost
-#    depends_on:
-#      - etcd1
-#      - etcd2
-#    networks:
-#      - network1
-#    container_name: patrpost1
-#    hostname: pp1  #
+  pp1:
+    image: patrpost
+    depends_on:
+      - etcd1
+      - etcd2
+    networks:
+      network1:
+        ipv4_address: 172.16.0.3 
+    restart: on-failure  
+    container_name: patrpost1
+    hostname: pp1  
+    environment:
+      PATRONI_POSTGRESQL_USER: postgres
+      PATRONI_POSTGRESQL_PASSWORD: postgres
+      PATRONI_NAME: patrpost1
+      PATRONI_RESTAPI_CONNECT_ADDRESS: 172.16.0.3:8008
+      PATRONI_RESTAPI_LISTEN: 172.16.0.3:8008
+      PATRONI_POSTGRESQL_CONNECT_ADDRESS: 172.16.0.3:5432
+      PATRONI_POSTGRESQL_LISTEN: 172.16.0.3:5432
+    user: postgres
+    build:
+      context: ./patroni
+      dockerfile: Dockerfile
+    command: service postgresql restart
+    command: patroni /etc/patroni.yml
+#    stdin_open: true
+#    tty: true
 
-#    build: 
-#      context: ./patroni
-#   
-#   pp2:
-#     <<: *pp
-#     container_name: patrpost2
-#     hostname: pp2  
-
-
+  pp2:
+    image: patrpost
+    depends_on:
+      - pp1
+    networks:
+      network1:
+        ipv4_address: 172.16.0.4
+    container_name: patrpost2
+    hostname: pp2  
+    environment:
+      PATRONI_POSTGRESQL_USER: postgres
+      PATRONI_POSTGRESQL_PASSWORD: postgres
+      PATRONI_NAME: patrpost2
+      PATRONI_RESTAPI_CONNECT_ADDRESS: 172.16.0.4:8008
+      PATRONI_RESTAPI_LISTEN: 172.16.0.4:8008
+      PATRONI_POSTGRESQL_LISTEN: 172.16.0.4:5432
+      PATRONI_POSTGRESQL_CONNECT_ADDRESS: 172.16.0.4:5432
+    user: postgres
+    command: service postgresql restart
+    command: patroni /etc/patroni.yml
+#    stdin_open: true
+#    tty: true
 
 networks:
   network1:
+    external: true
+#    ipam:
+#      driver: default
+#      config:
+#        - subnet: "172.16.0.0/24"
