@@ -1,15 +1,9 @@
 scope: pgsql 
 namespace: /cluster/
 
-#restapi:
-#    listen: 0.0.0.0:8008
-#    connect_address: 127.0.0.1:8008
-
 etcd:
-    hosts: node1:2379,node2:2379
+    hosts: node1:2379,node2:2379,node3:2379
 
-# this section (bootstrap) will be written into Etcd:/<namespace>/<scope>/config after initializing new cluster
-# and all other cluster members will use it as a `global configuration`
 bootstrap:
     dcs:
         ttl: 100
@@ -31,12 +25,13 @@ bootstrap:
     - encoding: UTF-8
     - data-checksums
     - locale: C.UTF-8
-    # init pg_hba.conf должен содержать адреса ВСЕХ машин, используемых в кластере
+
     pg_hba:
     - host replication postgres ::1/128 md5
     - host replication postgres 127.0.0.1/32 md5
-    - host replication postgres 172.16.0.3/24 md5
-    - host replication postgres 172.16.0.4/24 md5
+    - host replication postgres 172.16.0.11/24 md5
+    - host replication postgres 172.16.0.12/24 md5
+    - host replication postgres 172.16.0.13/24 md5
     - host all all 0.0.0.0/0 md5
 
     users:
@@ -46,8 +41,6 @@ bootstrap:
               - createrole
               - createdb
 postgresql:
-#    listen: 0.0.0.0:5432
-#    connect_address: 127.0.0.1:5432
     data_dir: /data/patroni
     bin_dir:  /usr/lib/postgresql/9.6/bin
     pgpass: /tmp/pgpass
