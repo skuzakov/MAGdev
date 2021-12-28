@@ -1,2 +1,2 @@
 # MAGdev
-Just run playbook and cluster will be created
+Just run playbook and cluster will be created at localhost
