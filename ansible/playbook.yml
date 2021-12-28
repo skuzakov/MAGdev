@@ -1,0 +1,20 @@
+---
+
+- name: deploy_cluster_pgsql
+  hosts: all
+  become: yes
+
+  tasks:
+  
+  - name: install docker
+    apt: name=docker state=latest
+  - name: start docker
+    command: systemctl start docker
+  - name: install docker-compose 
+    apt: name=docker-compose state=latest
+  - name: create network
+    command: docker network create --gateway 172.16.0.254 --subnet 172.16.0.0/24 network1
+  - name: cluster up
+    community.docker.docker_compose: 
+      project_src: /home/MAGdev/ppe/   
+      build: yes

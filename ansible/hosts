@@ -1,0 +1,5 @@
+#mycluster
+
+[just_one_server]
+
+127.0.0.1 ansible_user=debian ansible_password=debian
